@@ -3,6 +3,9 @@
   hosts: test
 
   tasks:
+  - name: Adding docker repo
+    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
   - name: Package manager
     package: 
        name: docker-ce
