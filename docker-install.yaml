@@ -1,0 +1,10 @@
+---
+- name: Installing docker
+  hosts: test
+
+  tasks:
+  - name: Package manager
+    package: 
+       name: docker-ce
+       state: latest
+
