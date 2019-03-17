@@ -1,0 +1,10 @@
+---
+- hosts: test
+  remote_user: root
+  tasks:
+   #- name: Changing SMTP relay
+    - lineinfile:
+       backrefs: yes
+       path: /etc/mail/sendmail.mc
+       regexp: ^dnl define\(`SMART_HOST\', `smtp\.your\.provider\'\)dnl
+       line: "define(`SMART_HOST', `myserver.com')dnl"
