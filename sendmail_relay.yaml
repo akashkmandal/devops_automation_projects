@@ -2,9 +2,18 @@
 - hosts: test
   remote_user: root
   tasks:
-   #- name: Changing SMTP relay
-    - lineinfile:
-       backrefs: yes
-       path: /etc/mail/sendmail.mc
-       regexp: ^dnl define\(`SMART_HOST\', `smtp\.your\.provider\'\)dnl
-       line: "define(`SMART_HOST', `myserver.com')dnl"
+    - name: Changing SMTP relay
+      lineinfile:
+        backrefs: yes
+        backup: yes
+        path: /etc/mail/sendmail.mc
+        regexp: ^dnl define\(`SMART_HOST\', `smtp\.your\.provider\'\)dnl
+        line: "define(`SMART_HOST', `mysmtp.relay.com')dnl"
+
+    - name: Compile sendmail configuration
+      shell: m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+
+    - name: Re-Start sendmail service
+      service:
+        name: sendmail
+        state: restarted
