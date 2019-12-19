@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#!/usr/bin/env python3
 ########################################
 ###Created By Akash Mandal           ###
 ###Purpose: To extend LVM            ###
@@ -11,8 +12,13 @@ import subprocess
 while True:
     print("Please make sure that mount point exist, otherwise it won't go further")
     try:
-        mount_point = raw_input("Please enter mount point name. i.e. /mnt: ")
-        check_mount=os.path.ismount(mount_point)
+        python_vers=sys.version_info[0]
+        if python_vers == 2:
+            mount_point = raw_input("Please enter mount point name. i.e. /mnt: ")
+            check_mount=os.path.ismount(mount_point)
+        elif python_vers == 3:
+            mount_point = input("Please enter mount point name. i.e. /mnt: ")
+            check_mount=os.path.ismount(mount_point)
         if check_mount == True:
             break
     except:
@@ -30,17 +36,30 @@ lv_format=str(new_size)+'G'
 #Collecting output of df and requested mountpoint and getting the output on a list
 fsout = subprocess.Popen(["df","-PTh", mount_point], stdout=subprocess.PIPE)
 fsmsg,err=fsout.communicate()
-fslst = [item.split() for item in fsmsg.split('\n')[1:-1]]
-new_list=list(fslst[0])
-xflist=new_list[1]
-print("======LVM path of %s is======: "%mount_point)
-print(new_list[0])
-lv_vg=(new_list[0])
-get_vg_name=subprocess.Popen(["lvdisplay", lv_vg], stdout=subprocess.PIPE)
-vgmsg,err=get_vg_name.communicate()
-fslst_more = [item.split() for item in vgmsg.split('\n')[1:-1]]
-vg_from_lv=fslst_more[1]
-my_lis=[]
+if python_vers == 2:
+    fslst = [item.split() for item in fsmsg.split('\n')[1:-1]]
+    new_list=list(fslst[0])
+    xflist=new_list[1]
+    print("======LVM path of %s is======: "%mount_point)
+    print(new_list[0])
+    lv_vg=(new_list[0])
+    get_vg_name=subprocess.Popen(["lvdisplay", lv_vg], stdout=subprocess.PIPE)
+    vgmsg,err=get_vg_name.communicate()
+    fslst_more = [item.split() for item in vgmsg.split('\n')[1:-1]]
+    vg_from_lv=fslst_more[1]
+    my_lis=[]
+elif python_vers == 3:
+    fslst = [item.split() for item in fsmsg.decode().split('\n')[1:-1]]
+    new_list=list(fslst[0])
+    xflist=new_list[1]
+    print("======LVM path of %s is======: "%mount_point)
+    print(new_list[0])
+    lv_vg=(new_list[0])
+    get_vg_name=subprocess.Popen(["lvdisplay", lv_vg], stdout=subprocess.PIPE)
+    vgmsg,err=get_vg_name.communicate()
+    fslst_more = [item.split() for item in vgmsg.decode().split('\n')[1:-1]]
+    vg_from_lv=fslst_more[1]
+    my_lis=[]
 def unnesting_list(fslst_more):
     for items in fslst_more:
         if type(items)==list:
@@ -59,10 +78,16 @@ if 'datavg' in my_lis:
    #start---------------------------
     out = subprocess.Popen(["vgs", "--units", "g"], stdout=subprocess.PIPE)
     msg,err=out.communicate()
-    lst = [item.split() for item in msg.split('\n')[1:-1]]
-    vg_space = list(lst[0])
-    extvg = vg_space[6]
-    split_g=extvg.rstrip('g')
+    if python_vers == 2:
+        lst = [item.split() for item in msg.split('\n')[1:-1]]
+        vg_space = list(lst[0])
+        extvg = vg_space[6]
+        split_g=extvg.rstrip('g')
+    elif python_vers == 3:
+        lst = [item.split() for item in msg.decode().split('\n')[1:-1]]
+        vg_space = list(lst[0])
+        extvg = vg_space[6]
+        split_g=extvg.rstrip('g')
     #print split_g
     if float(split_g) >= float(new_size):
         print("\n***************************************")
@@ -86,10 +111,15 @@ if 'datavg' in my_lis:
             print('Uknown filesystem')
     elif float(split_g) <= float(new_size):
          while True:
-             print('Current available size is %s, and requested size is %d'%(extvg,new_size))
-             choice=raw_input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
-             if yes, Please press Y to continue or N to terminate: \n''')
-             change_case=choice.upper()
+             print('Current available size is %s, and requested size is %d GB'%(extvg,new_size))
+             if python_vers == 2:
+                 choice=raw_input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
+                 if yes, Please press Y to continue or N to terminate: \n''')
+                 change_case=choice.upper()
+             if python_vers == 3:
+                 choice=input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
+                 if yes, Please press Y to continue or N to terminate: \n''')
+                 change_case=choice.upper()
              if change_case == 'Y' or change_case == 'YES':
                  break
              elif change_case == 'N' or change_case == 'NO':
@@ -134,19 +164,30 @@ elif 'system' in my_lis:
     #print("vgname is %s"%(my_lis[sysvg_name]))
     out = subprocess.Popen(["vgs", "--units", "g"], stdout=subprocess.PIPE)
     msg,err=out.communicate()
-    lst = [item.split() for item in msg.split('\n')[1:-1]]
-    vg_space = list(lst[1])
+    if python_vers == 2:
+        lst = [item.split() for item in msg.split('\n')[1:-1]]
+        vg_space = list(lst[1])
     #print(vg_space)
-    extvg = vg_space[6]
-    split_g=extvg.rstrip('g')
+        extvg = vg_space[6]
+        split_g=extvg.rstrip('g')
     #print split_g
     #make_choice=raw_input("\033[1;33;40m WARNING!!! VG is system VG. Do you want to continue? Y/N \n")
     #new_choice=make_choice.upper()
     #if new_choice == "N":
+    elif  python_vers == 3:
+        lst = [item.split() for item in msg.decode().split('\n')[1:-1]]
+        vg_space = list(lst[1])
+    #print(vg_space)
+        extvg = vg_space[6]
+        split_g=extvg.rstrip('g')
     while True:
+            if python_vers == 2:
             #print('Current available size is %s, and requested size is %d'%(extvg,new_size))
-            choice=raw_input('''\033[1;33;40m WARNING!!! This is system VG.
-            Please press Y to continue or N to terminate: \n''')
+                choice=raw_input('''\033[1;33;40m WARNING!!! This is system VG.
+                Please press Y to continue or N to terminate: \n''')
+            elif python_vers == 3:
+                choice=input('''\033[1;33;40m WARNING!!! This is system VG.
+                Please press Y to continue or N to terminate: \n''')
             change_case=choice.upper()
             if change_case == 'Y' or change_case == 'YES':
                 break
@@ -184,9 +225,14 @@ elif 'system' in my_lis:
                 print('Uknown filesystem')
     elif float(split_g) <= float(new_size):
         while True:
-            print('Current available size is %s, and requested size is %d'%(extvg,new_size))
-            choice=raw_input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
-            if yes, Please press Y to continue or N to terminate: \n''')
+            if python_vers == 2:
+                print('Current available size is %s, and requested size is %s G'%(extvg,new_size))
+                choice=raw_input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
+                if yes, Please press Y to continue or N to terminate: \n''')
+            if python_vers == 3:
+                print('Current available size is %s, and requested size is %s G'%(extvg,new_size))
+                choice=input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
+                if yes, Please press Y to continue or N to terminate: \n''')
             change_case=choice.upper()
             if change_case == 'Y' or change_case == 'YES':
                 break
@@ -195,10 +241,16 @@ elif 'system' in my_lis:
                 quit()
         get_syspv_info=subprocess.Popen(["pvs"], stdout=subprocess.PIPE)
         syspvmsg,err=get_syspv_info.communicate()
-        syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
-        syssdb_list=list(syspvlist)
+        if python_vers == 2:
+            syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
+            syssdb_list=list(syspvlist)
          #print syssdb_list
-        my_sys_pv=[]
+            my_sys_pv=[]
+        if python_vers == 3:
+            syspvlist = [item.split() for item in syspvmsg.decode().split('\n')[1:-1]]
+            syssdb_list=list(syspvlist)
+         #print syssdb_list
+            my_sys_pv=[]
         for values in syssdb_list:
             for val in values:
                 my_sys_pv.append(val)
