@@ -15,12 +15,24 @@ while True:
         python_vers=sys.version_info[0]
         if python_vers == 2:
             mount_point = raw_input("Please enter mount point name. i.e. /mnt: ")
-            check_mount=os.path.ismount(mount_point)
+            #check_mount=os.path.ismount(mount_point)
+            if mount_point == '/boot':
+                print("Not a LVM filesystem. Please rerun the program.")
+                #quit()
+            else:
+                check_mount=os.path.ismount(mount_point)
+                if check_mount == True:
+                    break
         elif python_vers == 3:
             mount_point = input("Please enter mount point name. i.e. /mnt: ")
-            check_mount=os.path.ismount(mount_point)
-        if check_mount == True:
-            break
+            #check_mount=os.path.ismount(mount_point)
+            if mount_point == '/boot':
+                print("Not a LVM filesystem. Please rerun the program.")
+                #quit()
+            else:
+                check_mount=os.path.ismount(mount_point)
+                if check_mount == True:
+                    break
     except:
         #print("Mount point does not exist")
         quit()
@@ -28,7 +40,7 @@ while True:
 while True:
     try:
         print("Please enter size in GB. i.e. 1")
-        new_size = input()
+        new_size = int(input())
         break
     except:
         print("\nSize is not valid, please enter correct size")
@@ -111,7 +123,7 @@ if 'datavg' in my_lis:
             print('Uknown filesystem')
     elif float(split_g) <= float(new_size):
          while True:
-             print('Current available size is %s, and requested size is %d GB'%(extvg,new_size))
+             print('Current available size is %s, and requested size is %s GB'%(extvg,new_size))
              if python_vers == 2:
                  choice=raw_input('''Going to perform a resize operation of disk, please make sure you have increased the size from VMware/Azure,
                  if yes, Please press Y to continue or N to terminate: \n''')
@@ -129,9 +141,13 @@ if 'datavg' in my_lis:
                  print("exit")
          get_syspv_info=subprocess.Popen(["pvs"], stdout=subprocess.PIPE)
          syspvmsg,err=get_syspv_info.communicate()
-         syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
-         syssdb_list=list(syspvlist)
+         if python_vers == 2:
+             syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
+             syssdb_list=list(syspvlist)
          #print syssdb_list
+         elif python_vers == 3:
+             syspvlist = [item.split() for item in syspvmsg.decode().split('\n')[1:-1]]
+             syssdb_list=list(syspvlist)
          my_sys_pv=[]
          for values in syssdb_list:
              for val in values:
@@ -167,22 +183,15 @@ elif 'system' in my_lis:
     if python_vers == 2:
         lst = [item.split() for item in msg.split('\n')[1:-1]]
         vg_space = list(lst[1])
-    #print(vg_space)
         extvg = vg_space[6]
         split_g=extvg.rstrip('g')
-    #print split_g
-    #make_choice=raw_input("\033[1;33;40m WARNING!!! VG is system VG. Do you want to continue? Y/N \n")
-    #new_choice=make_choice.upper()
-    #if new_choice == "N":
     elif  python_vers == 3:
         lst = [item.split() for item in msg.decode().split('\n')[1:-1]]
         vg_space = list(lst[1])
-    #print(vg_space)
         extvg = vg_space[6]
         split_g=extvg.rstrip('g')
     while True:
             if python_vers == 2:
-            #print('Current available size is %s, and requested size is %d'%(extvg,new_size))
                 choice=raw_input('''\033[1;33;40m WARNING!!! This is system VG.
                 Please press Y to continue or N to terminate: \n''')
             elif python_vers == 3:
@@ -201,8 +210,12 @@ elif 'system' in my_lis:
         print("Free storage available in VG is " + extvg)
         get_syspv_info=subprocess.Popen(["pvs"], stdout=subprocess.PIPE)
         syspvmsg,err=get_syspv_info.communicate()
-        syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
-        syssdb_list=list(syspvlist)
+        if python_vers == 2:
+            syspvlist = [item.split() for item in syspvmsg.split('\n')[1:-1]]
+            syssdb_list=list(syspvlist)
+        elif python_vers == 3:
+            syspvlist = [item.split() for item in syspvmsg.decode().split('\n')[1:-1]]
+            syssdb_list=list(syspvlist)
          #print syssdb_list
         my_sys_pv=[]
         for values in syssdb_list:
@@ -222,7 +235,7 @@ elif 'system' in my_lis:
                 print(lvextend_command)
                 print(resizetwofs)
             else:
-                print('Uknown filesystem')
+                print('Unknown filesystem')
     elif float(split_g) <= float(new_size):
         while True:
             if python_vers == 2:
@@ -237,7 +250,7 @@ elif 'system' in my_lis:
             if change_case == 'Y' or change_case == 'YES':
                 break
             elif change_case == 'N' or change_case == 'NO':
-                print('Terminateing the program')
+                print('Terminating the program')
                 quit()
         get_syspv_info=subprocess.Popen(["pvs"], stdout=subprocess.PIPE)
         syspvmsg,err=get_syspv_info.communicate()
