@@ -1,0 +1,27 @@
+- hosts: servers
+  gather_facts: true
+  user: root
+  vars: 
+    file_path: /etc/security/access.conf
+  tasks:
+    - name: Allow Root login 
+      lineinfile: 
+        path: '{{ file_path }}'
+        regexp: '#-:ALL:ALL'
+        line: "+:root:ALL"
+        state: present
+    - name: Disable logins for remaning users
+      lineinfile:
+        path: '{{ file_path  }}'
+        line: '-:ALL:ALL'
+        state: present
+    - name: Changing PAM configuration for denying non root account
+      lineinfile:
+        path: /etc/pam.d/system-auth
+        line: 'account     required      pam_access.so ##'
+        insertbefore: '^account     required'
+    - name: Part of PAM configuration
+      lineinfile:
+        path: /etc/pam.d/password-auth
+        line: 'account     required      pam_access.so ##'
+        insertafter: '^auth        required'
