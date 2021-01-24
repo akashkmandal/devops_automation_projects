@@ -1,0 +1,13 @@
+- name: Performing post checks
+  hosts: dest
+  tasks:
+  - name: Running puppet post patching
+    puppet:
+
+  - name: Enable user login
+    file:
+      path: /etc/security/access.conf
+      state: absent
+  
+  - name: 
+    command: mv /etc/security/access.conf-pre-patch /etc/security/access.conf
