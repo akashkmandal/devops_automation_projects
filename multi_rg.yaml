@@ -1,0 +1,15 @@
+- hosts: localhost
+  connection: local
+
+  tasks:
+
+  - name: Create a resource group
+    azure_rm_resourcegroup:
+      name: '{{ item }}'
+      location: eastus
+      tags:
+        testing: testing
+
+    loop:
+      - demorg
+      - ansrg
