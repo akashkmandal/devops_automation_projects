@@ -13,3 +13,22 @@
     loop:
       - demorg
       - ansrg
+
+# or below method can be used
+
+- hosts: localhost
+  connection: local
+  vars:
+    rg_name:
+      - one
+      - two
+  tasks:
+
+  - name: Create a resource group
+    azure_rm_resourcegroup:
+      name: '{{ item }}'
+      location: eastus
+      tags:
+        testing: testing
+
+    loop: "{{ rg_name }}"
