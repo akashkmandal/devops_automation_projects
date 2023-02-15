@@ -1,13 +1,73 @@
-df = df.append(new_row, ignore_index=True)
-Traceback (most recent call last):
-  File "/Users/akash.mandal/python_prog/devops_automation_projects/30_days_pred.py", line 73, in <module>
-    new_rows = pd.DataFrame({'Date': dates, 'Close': scaler.inverse_transform(np.array(predictions).reshape(-1, 1)).flatten()})
-  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/frame.py", line 664, in __init__
-    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy, typ=manager)
-  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 493, in dict_to_mgr
-    return arrays_to_mgr(arrays, columns, index, dtype=dtype, typ=typ, consolidate=copy)
-  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 118, in arrays_to_mgr
-    index = _extract_index(arrays)
-  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 666, in _extract_index
-    raise ValueError("All arrays must be of the same length")
-ValueError: All arrays must be of the same length
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
+
+# Load the data
+df = pd.read_csv('RELIANCE.csv')
+
+# Set the date as the index
+df = df.set_index(pd.DatetimeIndex(df['Date'].values))
+
+# Filter only the columns we need
+df = df[['Close']]
+
+# Create a scaler to scale the data
+scaler = MinMaxScaler(feature_range=(0,1))
+
+# Scale the data
+scaled_data = scaler.fit_transform(df)
+
+# Define the sequence length
+seq_length = 30
+
+# Split the data into x and y
+x = []
+y = []
+
+for i in range(seq_length, len(df)):
+    x.append(scaled_data[i-seq_length:i, 0])
+    y.append(scaled_data[i, 0])
+
+# Convert the x and y data into numpy arrays
+x, y = np.array(x), np.array(y)
+
+# Reshape the x data to be 3D for the LSTM
+x = np.reshape(x, (x.shape[0], x.shape[1], 1))
+
+# Build the LSTM model
+model = Sequential()
+model.add(LSTM(50, return_sequences=True, input_shape=(x.shape[1], 1)))
+model.add(LSTM(50, return_sequences=False))
+model.add(Dense(25))
+model.add(Dense(1))
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+# Train the model
+model.fit(x, y, batch_size=1, epochs=1)
+
+# Get the last 30 day closing price and scale it
+last_30_days = df['Close'][-30:].values
+last_30_days_scaled = scaler.transform(last_30_days.reshape(-1, 1))
+
+# Create an empty list to hold the predictions
+predictions = []
+
+# Loop through the next 3 days and predict the closing price
+for i in range(1, 4):
+    next_day_price = model.predict(last_30_days_scaled.reshape(1, -1, 1))
+    predictions.append(scaler.inverse_transform(next_day_price)[0][0])
+    last_30_days_scaled = np.append(last_30_days_scaled, next_day_price, axis=0)
+    last_30_days_scaled = last_30_days_scaled[1:]
+
+# Create a list of dates for the next 3 days
+dates = pd.date_range(start=df.index[-1]+pd.Timedelta('1 day'), periods=3, freq='D')
+
+# Create a new DataFrame with the dates and predicted prices
+new_rows = pd.DataFrame({'Date': dates, 'Close': predictions})
+
+# Print the DataFrame
+print(new_rows)
