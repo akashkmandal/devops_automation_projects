@@ -60,11 +60,12 @@ y_pred = scaler.inverse_transform(model.predict(x_test))
 last_predicted = data[-look_back:].reshape(1, look_back, 1)
 predictions = []
 for i in range(7):
-    next_day_price = model.predict(last_predicted)
+    next_day_price = model.predict(last_predicted)[0,0]
+    print(next_day_price)
     last_predicted = np.append(last_predicted[:,1:,:], next_day_price.reshape(1, 1, 1), axis=1)
     predictions.append(next_day_price[0, 0])
     date = pd.to_datetime(df['Date'].iloc[-1]) + pd.DateOffset(days=1)
-    new_row = {'Date': date.date(), 'Close': scaler.inverse_transform([[next_day_price]])[0][0]}
+    new_row = {'Date': date.date(), 'Close': scaler.inverse_transform(next_day_price.reshape(1, -1))[0]}
     df = df.append(new_row, ignore_index=True)
 
 # Add predicted price to DataFrame
