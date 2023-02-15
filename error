@@ -1,3 +1,13 @@
-line 66, in <module>
-    predictions.append(next_day_price[0, 0])
-IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
+df = df.append(new_row, ignore_index=True)
+Traceback (most recent call last):
+  File "/Users/akash.mandal/python_prog/devops_automation_projects/30_days_pred.py", line 73, in <module>
+    new_rows = pd.DataFrame({'Date': dates, 'Close': scaler.inverse_transform(np.array(predictions).reshape(-1, 1)).flatten()})
+  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/frame.py", line 664, in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy, typ=manager)
+  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 493, in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, typ=typ, consolidate=copy)
+  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 118, in arrays_to_mgr
+    index = _extract_index(arrays)
+  File "/opt/homebrew/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 666, in _extract_index
+    raise ValueError("All arrays must be of the same length")
+ValueError: All arrays must be of the same length
